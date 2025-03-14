@@ -1,14 +1,10 @@
 import { Body, Req, Controller, HttpCode, Post, UseGuards, Res, Get } from '@nestjs/common';
 import { Response } from 'express';
-// import RegisterDto from './dto/register.dto';
-// import RequestWithUser from './requestWithUser.interface';
-// import { LocalAuthenticationGuard } from './localAuthentication.guard';
-// import JwtAuthenticationGuard from './jwt-authentication.guard';
 import { AuthService } from './auth.service';
 import RegisterDto from './dto/register.dto';
 import { LocalAuthenticationGuard } from './localAuthentication.guard';
 import RequestWithUser from './requestWithUser.interface';
-// import RegisterDto from './register.dto';
+import JwtAuthenticationGuard from './jwt-authentication.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -25,35 +21,23 @@ export class AuthController {
     @UseGuards(LocalAuthenticationGuard)
     @Post('log-in')
     async login(@Req() request: RequestWithUser, @Res() response: Response) {
-        // const user = request.user;
-
         const { user } = request;
         const cookie = this.authService.getCookieWithJwtToken(user.id);
         response.setHeader('Set-Cookie', cookie);
-        // user.password = undefined;
-        return response.send(user);
+        const { password, ...result } = user;
+        return response.send(result);
     }
 
-    // async logIn(@Req() request: RequestWithUser, @Res() response: Response) {
-    //     const { user } = request;
-    //     const cookie = this.authService.getCookieWithJwtToken(user.id);
-    //     response.setHeader('Set-Cookie', cookie);
-    //     user.password = undefined;
-    //     return response.send(user);
-    // }
+    @UseGuards(JwtAuthenticationGuard)
+    @Get()
+    authenticate(@Req() request: RequestWithUser) {
+        const { password, ...userWithoutPassword } = request.user;
+        return userWithoutPassword;
+    }
 
-    // @UseGuards(JwtAuthenticationGuard)
-    // @Post('log-out')
-    // async logOut(@Res() response: Response) {
-    //     response.setHeader('Set-Cookie', this.authService.getCookieForLogOut());
-    //     return response.sendStatus(200);
-    // }
-
-    // @UseGuards(JwtAuthenticationGuard)
-    // @Get()
-    // authenticate(@Req() request: RequestWithUser) {
-    //     const user = request.user;
-    //     user.password = undefined;
-    //     return user;
-    // }
+    @Post('log-out')
+    async logOut(@Req() request: RequestWithUser, @Res() response: Response) {
+        response.setHeader('Set-Cookie', this.authService.getCookieForLogOut());
+        return response.sendStatus(200);
+    }
 }

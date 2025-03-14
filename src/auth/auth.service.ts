@@ -5,8 +5,8 @@ import * as bcrypt from 'bcrypt';
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
-import { TokenPayload } from "./tokenPayload.interface";
 import { PostgresErrorCode } from "src/database/postgresErrorCodes.enum";
+import TokenPayload from "./tokenPayload.interface";
 
 @Injectable()
 export class AuthService {
@@ -18,14 +18,13 @@ export class AuthService {
 
     public async register(registrationData: RegisterDto) {
         const hashedPassword = await bcrypt.hash(registrationData.password, 10);
-
         try {
             const createdUser = await this.usersService.create({
                 ...registrationData,
                 password: hashedPassword
             });
-            // createdUser.password = undefined;
-            return createdUser;
+            const { password, ...result } = createdUser;
+            return result;
         } catch (error) {
             console.log('ERRO', error);
 
@@ -41,14 +40,11 @@ export class AuthService {
             const user = await this.usersService.getByEmail(email);
 
             await this.verifyPassword(plainTextPassword, user.password);
-            // user.password = undefined;
             return user;
         } catch (error) {
             throw new HttpException('Wrong credentials provided', HttpStatus.BAD_REQUEST);
         }
     }
-
-
 
     private async verifyPassword(plainTextPassword: string, hashedPassword: string) {
         const isPasswordMatching = await bcrypt.compare(
@@ -60,11 +56,13 @@ export class AuthService {
         }
     }
 
-
+    public getCookieForLogOut() {
+        return `Authentication=; HttpOnly; Path=/; Max-Age=0`;
+    }
 
     public getCookieWithJwtToken(userId: string) {
         const payload: TokenPayload = { userId };
         const token = this.jwtService.sign(payload);
-        return `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_EXPIRATION_TIME')}`;
+        return `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get<string>('JWT_EXPIRATION_TIME')}`;
     }
 }
