@@ -26,11 +26,7 @@ import { HealthModule } from './health/health.module';
     HealthModule
   ],
   controllers: [AppController],
-  providers: [AppService,
-    // {
-    //   provide: 'APP_GUARD',
-    //   useClass: JwtAuthenticationGuard,
-    // }
+  providers: [AppService
   ],
 })
 export class AppModule { }
