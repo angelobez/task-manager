@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, HttpExcep
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
-import JwtAuthenticationGuard from 'src/auth/jwt-authentication.guard';
+import JwtAuthenticationGuard from '../auth/jwt-authentication.guard';
 import RequestWithUser from 'src/auth/requestWithUser.interface';
 import { Status } from '@prisma/client';
 
